@@ -18,6 +18,32 @@ def mostrar_cabecera(consola):
         expand=False
     )
     consola.print(panel)
+def obtener_extension(nombre_archivo):
+    """
+    Obtiene la extensión de un archivo en minúsculas y sin el punto inicial.
+    Si el archivo no tiene extensión, devuelve 'sin_extension'.
+    """
+    _, ext = os.path.splitext(nombre_archivo)
+    if ext:
+        return ext.lower().replace(".", "")
+    return "sin_extension"
+
+def tamano_legible(tamano_bytes):
+    """
+    Convierte un tamaño en bytes a su unidad legible más adecuada (bytes, KB, MB, GB).
+    Se divide sucesivamente entre 1024.
+    """
+    unidades = ["bytes", "KB", "MB", "GB"]
+    indice = 0
+    valor = float(tamano_bytes)
+    
+    while valor >= 1024 and indice < len(unidades) - 1:
+        valor /= 1024
+        indice += 1
+        
+    if indice == 0:
+        return f"{int(valor)} {unidades[indice]}"
+    return f"{valor:.2f} {unidades[indice]}"
 
 def una_dentro_de_otra(ruta_a, ruta_b):
     """
