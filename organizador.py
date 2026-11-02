@@ -15,16 +15,37 @@ def mostrar_cabecera(consola):
         "[bold cyan]Organizador Automático de Archivos[/bold cyan]\n"
         "Clasifica tus archivos por extensión de forma recursiva.",
         border_style="cyan",
+        expand=False
     )
     consola.print(panel)
 
+def una_dentro_de_otra(ruta_a, ruta_b):
+    """
+    Comprueba si dos rutas son la misma carpeta o si una está dentro de la otra.
+    """
+    abs_a = os.path.abspath(ruta_a) + os.sep
+    abs_b = os.path.abspath(ruta_b) + os.sep
+    return abs_a.startswith(abs_b) or abs_b.startswith(abs_a)
+
 def main():
-    # El objeto Console se crea una sola vez según los requisitos
     consola = Console()
     mostrar_cabecera(consola)
     
     ruta_origen = Prompt.ask("[bold yellow]Introduce la ruta de la carpeta de origen[/bold yellow]")
     ruta_destino = Prompt.ask("[bold yellow]Introduce la ruta de la carpeta de destino[/bold yellow]")
+    
+    # Comprobaciones de seguridad
+    if not os.path.isdir(ruta_origen):
+        consola.print(Panel("La carpeta de origen no existe o no es una carpeta.", border_style="red"))
+        return
+        
+    if os.path.exists(ruta_destino) and not os.path.isdir(ruta_destino):
+        consola.print(Panel("La ruta de destino ya existe y no es una carpeta.", border_style="red"))
+        return
+        
+    if una_dentro_de_otra(ruta_origen, ruta_destino):
+        consola.print(Panel("Origen y destino no pueden ser la misma carpeta ni estar una dentro de la otra.", border_style="red"))
+        return
 
 if __name__ == "__main__":
     main()
