@@ -119,6 +119,32 @@ def contar_archivos_recursivo(ruta):
             
     return total_archivos
 
+def mostrar_informe(consola, movidos, tamano_total, en_origen, en_destino, historial):
+    """Genera tablas resumen usando rich con las estadísticas finales."""
+    tabla_resumen = Table(title="Resumen de la Clasificación", show_header=True, header_style="bold magenta")
+    tabla_resumen.add_column("Métrica", style="cyan")
+    tabla_resumen.add_column("Valor", style="white")
+    
+    color_origen = "[green]" if en_origen == 0 else "[red]"
+    
+    tabla_resumen.add_row("Archivos movidos", str(movidos))
+    tabla_resumen.add_row("Tamaño total procesado", tamano_legible(tamano_total))
+    tabla_resumen.add_row("Archivos restantes en origen", f"{color_origen}{en_origen}[/]")
+    tabla_resumen.add_row("Total de archivos en destino", str(en_destino))
+    
+    consola.print(tabla_resumen)
+    consola.print("\n")
+    
+    if historial:
+        tabla_historial = Table(title="Historial de Movimientos", show_header=True, header_style="bold magenta")
+        tabla_historial.add_column("Nº", justify="right", style="cyan", width=4)
+        tabla_historial.add_column("Movimiento", style="white")
+        
+        for i, movimiento in enumerate(historial, 1):
+            tabla_historial.add_row(str(i), movimiento)
+            
+        consola.print(tabla_historial)
+
 def main():
     consola = Console()
     mostrar_cabecera(consola)
@@ -126,8 +152,9 @@ def main():
     ruta_origen = Prompt.ask("[bold yellow]Introduce la ruta de la carpeta de origen[/bold yellow]")
     ruta_destino = Prompt.ask("[bold yellow]Introduce la ruta de la carpeta de destino[/bold yellow]")
     
-    if not os.path.isdir(ruta_origen):
-        consola.print(Panel("La carpeta de origen no existe o no es una carpeta.", border_style="red"))
+    # Comprobaciones de seguridad
+    if not os.path.exists(ruta_origen) or not os.path.isdir(ruta_origen):
+        consola.print(Panel("La carpeta de origen no existe o no es una carpeta válida.", border_style="red"))
         return
         
     if os.path.exists(ruta_destino) and not os.path.isdir(ruta_destino):
@@ -137,6 +164,20 @@ def main():
     if una_dentro_de_otra(ruta_origen, ruta_destino):
         consola.print(Panel("Origen y destino no pueden ser la misma carpeta ni estar una dentro de la otra.", border_style="red"))
         return
+        
+    historial = []
+    
+    # Animación de carga mientras clasifica
+    with consola.status("[bold green]Organizando archivos...[/bold green]"):
+        tamano_total = clasificar_carpeta_recursivo(ruta_origen, ruta_destino, historial)
+        
+    # Cálculos post-clasificación
+    archivos_movidos = len(historial)
+    archivos_en_origen = contar_archivos_recursivo(ruta_origen)
+    archivos_en_destino = contar_archivos_recursivo(ruta_destino)
+    
+    # Mostrar el informe final
+    mostrar_informe(consola, archivos_movidos, tamano_total, archivos_en_origen, archivos_en_destino, historial)
 
 if __name__ == "__main__":
     main()
